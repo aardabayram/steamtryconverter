@@ -1,4 +1,16 @@
-const CONVERSION_RATE = 28.80;
+let CONVERSION_RATE = 30;
+const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  };
+  
+  fetch("https://tropik-usd-try.vercel.app/api/tryusd", requestOptions)
+    .then(response => response.json())
+    .then(result => {
+        CONVERSION_RATE = parseFloat(result.results.TRY).toFixed(2);
+    }
+    )
+    .catch(error => console.error('error: ', error));
 
 const isInt = (n) => {
 	return n % 1 === 0;
