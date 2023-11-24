@@ -2,7 +2,7 @@ var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};f
 
 let lastHash = "";
 
-const CONVERSION_RATE = 28.80;
+const CONVERSION_RATE = 28.87;
 
 const isInt = (n) => {
 	return n % 1 === 0;
