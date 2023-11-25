@@ -27,8 +27,9 @@ const convert = () => {
     const areas = document.querySelectorAll(".game_area_dlc_price");
     const purchases = document.querySelectorAll(".game_purchase_price");
     const search = document.querySelectorAll(".match_subtitle");
+    const price = document.querySelectorAll(".price");
 
-    [...originals, ...finals, ...areas, ...purchases, ...search].forEach(element => {
+    [...originals, ...finals, ...areas, ...purchases, ...search,...price].forEach(element => {
         let oldPrice = element.innerText;
 
         if (oldPrice.includes("TRY")) {
