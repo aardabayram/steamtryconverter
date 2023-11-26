@@ -3,10 +3,19 @@
   "name": "Steam TRY Converter",
   "version": "1.1",
   "description": "Converts USD prices to TRY on the Steam Store.",
+  "permissions": ["storage"],
+  "web_accessible_resources": [{
+    "matches": ["*://store.steampowered.com/*", "*://steamcommunity.com/*"],
+    "resources": ["/js/content.js", "/js/switch.js"]
+  }],
   "content_scripts": [
     {
       "matches": ["*://store.steampowered.com/*"],
-      "js": ["/js/content.js"]
+      "js": ["/js/store.js"]
+    },
+    {
+      "matches": ["*://steamcommunity.com/*"],
+      "js": ["/js/community.js"]
     }
   ],
   "action": {

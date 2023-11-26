@@ -1,66 +1,82 @@
-let CONVERSION_RATE = null;
-
 const requestOptions = {
-    method: 'GET',
-    redirect: 'follow'
+  method: "GET",
+  redirect: "follow",
 };
 
-fetch("https://tropik-usd-try.vercel.app/api/tryusd", requestOptions)
-    .then(response => response.json())
-    .then(result => {
-        CONVERSION_RATE = parseFloat(result.results.TRY).toFixed(2);
-    }
-    )
-    .catch(error => console.error('error: ', error));
-
 const isInt = (n) => {
-    return n % 1 === 0;
-}
+  return n % 1 === 0;
+};
 
 const isFloat = (n) => {
-    return Number(n) === n && n % 1 !== 0;
-}
+  return Number(n) === n && n % 1 !== 0;
+};
 
-const convert = () => {
-    const originals = document.querySelectorAll(".discount_final_price");
-    const finals = document.querySelectorAll(".discount_original_price");
-    const areas = document.querySelectorAll(".game_area_dlc_price");
-    const purchases = document.querySelectorAll(".game_purchase_price");
-    const search = document.querySelectorAll(".match_subtitle");
+export const getConversionRate = async () => {
+  try {
+    const dataFromLocalStorage = localStorage.getItem("conversionRate");
+    if (dataFromLocalStorage) {
+      const parsedData = JSON.parse(dataFromLocalStorage);
+      const date = new Date(parsedData.date);
+      const now = new Date();
+      const diff = Math.abs(now - date);
+      const minutes = Math.floor(diff / 1000 / 60);
+      if (minutes < 600) {
+        return parsedData.rate;
+      }
+    }
+    const response = await fetch(
+      "https://tropik-usd-try.vercel.app/api/tryusd",
+      requestOptions
+    );
+    const result = await response.json();
+    const dateFormatted = result.updated
+      .split(" ")[0]
+      .split(".")
+      .reverse()
+      .join("-");
+    const timeFormatted = result.updated.split(" ")[1];
+    const dateTime = new Date(`${dateFormatted}T${timeFormatted}+03:00`);
 
-    [...originals, ...finals, ...areas, ...purchases, ...search].forEach(element => {
-        let oldPrice = element.innerText;
+    const dataToLocalStorage = {
+      rate: result.results.TRY,
+      date: dateTime,
+    };
+    localStorage.setItem("conversionRate", JSON.stringify(dataToLocalStorage));
+    return parseFloat(result.results.TRY).toFixed(2);
+  } catch (e) {
+    console.error("error: ", e);
+    return null;
+  }
+};
 
-        if (oldPrice.includes("TRY")) {
-            return;
-        }
-
-        oldPrice = oldPrice.replaceAll("$", "");
-        oldPrice = oldPrice.replaceAll("USD", "");
-
-        const price = parseFloat(oldPrice);
-
-        const shouldConvert = (isInt(price) || isFloat(price));
-
-        if (shouldConvert) {
-            element.innerText = `${Number(price * CONVERSION_RATE).toFixed(2)} TRY`;
-        }
+export const convert = (conversionRate, classes) => {
+  chrome.storage.local.get({ showUsd: false }, (data) => {
+    [...classes].forEach((element) => {
+      
+      if (element.getAttribute("converted")) {
+        return;
+      }
+      
+      let oldPrice = element.innerText;
+  
+      if (oldPrice.includes("TRY")) {
+        return;
+      }
+      if (!oldPrice.includes("USD") && !oldPrice.includes("$")) {
+        return;
+      }
+  
+      oldPrice = oldPrice.replaceAll("$", "");
+      oldPrice = oldPrice.replaceAll("USD", "");
+      const price = parseFloat(oldPrice);
+      const shouldConvert = isInt(price) || isFloat(price);
+      if (shouldConvert) {
+        const convertedPrice = parseFloat(price * conversionRate).toFixed(2);
+        element.setAttribute("converted", true);
+        element.setAttribute("price-usd", price);
+        element.setAttribute("price-try", convertedPrice);
+        element.innerText = `${!data.showUsd ? "₺" : "$"}${ !data.showUsd ? convertedPrice : price}`;
+      }
     });
-}
-
-window.addEventListener("load", () => {
-
-    const observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutation) {
-            if (mutation.type === 'childList' || mutation.type === 'subtree') {
-                convert();
-            }
-        });
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-});
+  });
+};
